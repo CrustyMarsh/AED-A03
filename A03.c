@@ -395,7 +395,7 @@ static void recursive_decoder(int encoded_idx,int decoded_idx,int good_decoded_s
   // put your code here!
   _number_of_calls_++;
 
-  if (good_decoded_size == _original_message_size_){
+  if (_encoded_message_[encoded_idx] == '\0') {
     printf("message:\n  ");
     for (int i = 0; i < _original_message_size_; i++) {
       printf("%d ", _original_message_[i]);
@@ -424,20 +424,30 @@ static void recursive_decoder(int encoded_idx,int decoded_idx,int good_decoded_s
     }
   } */
 
-  while (_encoded_message_[bit_idx] != '\0') {
-    for (idx = 0; idx < _c_->n_symbols; idx++) {
-      strncpy(codeword, _c_->data[idx].codeword, bit_idx);    // copy at most "bit_idx" number of chars
-      codeword[bit_idx] = '\0';
+  for (int look_ahead = 1; look_ahead <= _c_->max_bits; look_ahead++) {
 
-      if (strcmp(codeword, _c_->data[idx].codeword) == 0) {
-        _decoded_message_[decoded_idx] = idx;
+    strncpy(codeword, &_encoded_message_[encoded_idx], look_ahead);    // copy at most "look_ahead" number of chars
+    codeword[look_ahead] = '\0';
 
-        recursive_decoder(encoded_idx+bit_idx, decoded_idx+1, good_decoded_size+1);
+    if (_encoded_message_[encoded_idx+look_ahead-1] == '\0') {    // deadend
+      break;
+    }
+
+    for (int codes_idx = 0; codes_idx < _c_->n_symbols; codes_idx++) {
+      
+      if (strcmp(codeword, _c_->data[codes_idx].codeword) == 0) {
+        _decoded_message_[decoded_idx] = codes_idx;
+
+        //if decoded char is correct, good_decoded_size++
+        // right here!
+
+        recursive_decoder(encoded_idx+look_ahead, decoded_idx+1, good_decoded_size);
       }
     }
 
     bit_idx++;
   }
+
 
   // what dis
   //printf("parent: %d\n", parent);
@@ -447,11 +457,11 @@ static void recursive_decoder(int encoded_idx,int decoded_idx,int good_decoded_s
   //printf("-------\n");
 
   // just for testing
-  encoded_idx++;
-  decoded_idx++;
-  good_decoded_size++;
+  //encoded_idx++;
+  //decoded_idx++;
+  //good_decoded_size++;
 
-  recursive_decoder(encoded_idx, decoded_idx, good_decoded_size);
+  //recursive_decoder(encoded_idx, decoded_idx, good_decoded_size);
 }
 
 
